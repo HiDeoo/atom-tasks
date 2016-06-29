@@ -1,7 +1,15 @@
 @import "ui-variables";
 
 atom-text-editor::shadow, atom-text-editor {
+  .todo {
+    color: @text-color-subtle;
+    font-style: italic;
+  }
+
   .tasks {
+    font-style: normal;
+    
+    &.text { color: @text-color; }
     &.header { color: @text-color-warning; }
     &.marker { color: @text-color-subtle; }
     &.attribute { color: @text-color-info; }

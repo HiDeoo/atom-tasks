@@ -344,6 +344,7 @@ module.exports =
       completedTasks = []
       archiveProject = null
       insertRow = -1
+      noteEndLineNumber = -1
 
       # 1. Find the archives section, if it exists
 
@@ -351,6 +352,10 @@ module.exports =
         # if we already found the archive, no need
         # to parse any more!
         return false if archiveProject
+
+        # We don't need to parse notes.
+        return true if noteEndLineNumber != -1 and ind <= noteEndLineNumber
+
         info = tasks.parseLine editor, ind, atom.config.get('tasks')
         hasDone = _.some info.tags, (t) -> t.tagName.value is 'done'
         hasCancelled = _.some info.tags, (t) -> t.tagName.value is 'cancelled'
@@ -359,6 +364,18 @@ module.exports =
         el =
           lineNumber: ind
           line: i
+          note:
+            hasNote: false
+            range: []
+
+        # Check for notes only if the task is done or cancelled.
+        if hasDone or hasCancelled
+          el.note = tasks.getNotes editor, ++ind
+
+        if el.note.hasNote
+          noteEndLineNumber = el.note.range[1]
+        else
+          noteEndLineNumber = -1
 
         archiveProject = el if hasArchive
         completedTasks.push el if hasDone or hasCancelled
@@ -402,7 +419,21 @@ module.exports =
       completedTasks.forEach (i)->
         editor.buffer.insert insertPoint, "#{indentation}#{i.line.trim()}\n"
 
+        if i.note.hasNote
+          noteInsertPoint = insertPoint
+          noteIndentation = editor.buildIndentString 2
+
+          for lineNumber in [i.note.range[0]..i.note.range[1]]
+            line = editor.buffer.lineForRow lineNumber
+
+            noteInsertPoint = new Point ++noteInsertPoint.row, noteInsertPoint.column
+            editor.buffer.insert noteInsertPoint, "#{noteIndentation}#{line.trim()}\n"
+
       # 4. Copy is completed, start deleting the
       #     copied items
       completedTasks.forEach (i)->
+        if i.note.hasNote
+          for lineNumber in [i.note.range[1]..i.note.range[0]]
+            editor.buffer.deleteRow lineNumber
+
         editor.buffer.deleteRow i.lineNumber

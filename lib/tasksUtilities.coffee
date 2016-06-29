@@ -54,6 +54,55 @@ module.exports =
     return result
 
   ###*
+   * Returns the informations for a note associated to a completed or cancelled task if available.
+   * @param {TextEditor} editor  Editor to use
+   * @param {Number} lineNumber  Number of line
+  ###
+  getNotes: (editor, lineNumber)->
+    checkForNote = true
+    hasNote = false
+    startLineNumber = lineNumber
+    range = []
+
+    while checkForNote
+      info = @getNote editor, lineNumber
+
+      if info.hasNote
+        checkForNote = true
+        hasNote = true
+        ++lineNumber
+      else if info.hasArchive
+        checkForNote = false
+        hasNote = false
+      else
+        checkForNote = false
+
+    if hasNote
+      --lineNumber
+      range = [ startLineNumber, lineNumber ]
+
+    result =
+      hasNote: hasNote
+      range: range
+
+    return result
+
+  ###*
+   * Parse a given line and determines if this line is a note.
+   * A note is defined as a block of text not containing empty lines.
+   * @param {TextEditor} editor  Editor to use
+   * @param {Number} lineNumber  Number of line
+  ###
+  getNote: (editor, lineNumber)->
+    info = @parseLine editor, lineNumber, atom.config.get('tasks')
+
+    result =
+      hasNote: info.type is 'text' and info.line.length > 0
+      hasArchive: info.project is 'Archive'
+
+    return result
+
+  ###*
    * Get all the tags on a given line
    * @param {TextEditor} editor  Editor to use
    * @param {Number} lineNumber  Number of line
