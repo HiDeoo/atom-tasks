@@ -1,3 +1,12 @@
+## 2.6.3
+* Fix for markdown in task items
+
+## 2.6.2
+* Fix for error when tasks file is in focus on load
+
+## 2.6.1
+* Fix for missing indentLevel code
+
 ## 2.6.0
 * Updated after breaking changes:
   * Removed dependency on displayBuffer
